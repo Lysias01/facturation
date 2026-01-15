@@ -2,45 +2,34 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Produit extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'nom',
-        'prix_vente',
         'prix_achat',
+        'prix_vente',
         'stock',
         'seuil_alerte'
     ];
 
-    // Relation avec les lignes de facture
-    public function lignesFacture()
-    {
-        return $this->hasMany(LigneFacture::class);
-    }
+    /* Relations */
 
-    // Relation avec les mouvements de stock
     public function mouvementsStock()
     {
         return $this->hasMany(MouvementStock::class);
     }
 
-    // Calcul du stock actuel à la volée
+    /* Helpers */
+
     public function getStockActuelAttribute()
     {
-        $sorties = $this->mouvementsStock()->where('type', 'sortie')->sum('quantite');
-        $entrees = $this->mouvementsStock()->where('type', 'entree')->sum('quantite');
-
-        return max($this->stock + $entrees - $sorties, 0);
+        return $this->stock;
     }
 
-    // Indicateur de stock critique
-    public function getStockCritiqueAttribute()
+    public function enAlerte(): bool
     {
-        return $this->stock_actuel <= $this->seuil_alerte;
+        return $this->stock <= $this->seuil_alerte;
     }
 }

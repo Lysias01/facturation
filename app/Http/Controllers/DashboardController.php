@@ -5,109 +5,191 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Facture;
 use App\Models\Client;
-use App\Models\Setting;
+use App\Models\Produit;
+use App\Models\MouvementStock;
 use Carbon\Carbon;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\DashboardStatsExport;
+use PDF;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        /** =========================
+         *  FILTRES
+         *  ========================= */
         $month = $request->month
             ? Carbon::createFromFormat('Y-m', $request->month)
             : now();
 
         $year = $request->year ?? now()->year;
+        $day  = $request->day ? Carbon::parse($request->day) : now();
 
         $startOfMonth = $month->copy()->startOfMonth();
         $endOfMonth   = $month->copy()->endOfMonth();
 
+        $startOfDay = $day->copy()->startOfDay();
+        $endOfDay   = $day->copy()->endOfDay();
+
         /** =========================
-         *  STATS DU MOIS (ANNÉE FIXÉE)
+         *  FACTURATION
          *  ========================= */
+
+        // Comptages
         $proformasMonthCount = Facture::where('type_document', 'pro-forma')
-            ->whereYear('created_at', $year)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->count();
 
         $recuMonthCount = Facture::where('type_document', 'recu')
-            ->whereYear('created_at', $year)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->count();
 
         $recuMonthSum = Facture::where('type_document', 'recu')
-            ->whereYear('created_at', $year)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->sum('total');
+
+        $recuDaySum = Facture::where('type_document', 'recu')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->sum('total');
 
         $proformasMonthSum = Facture::where('type_document', 'pro-forma')
-            ->whereYear('created_at', $year)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->sum('total');
 
-        /** =========================
-         *  TOTAL ANNUEL (REÇUS)
-         *  ========================= */
         $recuYearSum = Facture::where('type_document', 'recu')
             ->whereYear('created_at', $year)
             ->sum('total');
 
+        // Clients
+        $clientsCount = Client::count();
+
         /** =========================
-         *  MOIS MAX / MIN (LOGIQUE CORRIGÉE)
+         *  COURBE DU CHIFFRE D’AFFAIRES
          *  ========================= */
-        $facturesByMonth = Facture::where('type_document', 'recu')
-            ->whereYear('created_at', $year)
-            ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
-            ->groupBy('month')
-            ->pluck('total', 'month');
+        $chartLabels = [];
+        $chartRecu = [];
+        $chartProforma = [];
 
-        $maxMonth = null;
-        $minMonth = null;
+        for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
+            $chartLabels[] = $date->format('d M');
 
-        if ($facturesByMonth->isNotEmpty()) {
-            $maxMonthNumber = $facturesByMonth->sortDesc()->keys()->first();
-            $minMonthNumber = $facturesByMonth->sort()->keys()->first();
+            $chartRecu[] = Facture::where('type_document', 'recu')
+                ->whereDate('created_at', $date)
+                ->sum('total');
 
-            $maxMonth = Carbon::create()->month($maxMonthNumber)->translatedFormat('F');
-            $minMonth = Carbon::create()->month($minMonthNumber)->translatedFormat('F');
+            $chartProforma[] = Facture::where('type_document', 'pro-forma')
+                ->whereDate('created_at', $date)
+                ->sum('total');
         }
 
         /** =========================
-         *  DONNÉES ANNEXES
+         *  STOCK
          *  ========================= */
-        $recentDocuments = Facture::with('client')
-            ->orderBy('created_at', 'desc')
-            ->limit(8)
+        $produitsCount = Produit::count();
+        $stockTotal = Produit::sum('stock');
+        $produitsCritiquesCount = Produit::whereColumn('stock', '<=', 'seuil_alerte')->count();
+
+        $entreesStockMonth = MouvementStock::where('type', 'entree')
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->sum('quantite');
+
+        $sortiesStockMonth = MouvementStock::where('type', 'sortie')
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->sum('quantite');
+
+        $produitsCritiques = Produit::whereColumn('stock', '<=', 'seuil_alerte')
+            ->orderBy('stock', 'asc')
+            ->limit(5)
             ->get();
 
-        $clientsCount = Client::count();
-        $settings = Setting::first();
+        $topProduitsSortie = MouvementStock::selectRaw('produit_id, SUM(quantite) as total')
+            ->where('type', 'sortie')
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->groupBy('produit_id')
+            ->orderByDesc('total')
+            ->with('produit')
+            ->limit(5)
+            ->get();
 
+        /** =========================
+         *  DERNIERS ÉLÉMENTS
+         *  ========================= */
+        $recentFactures = Facture::with('client')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        $recentMouvements = MouvementStock::with('produit')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        /** =========================
+         *  ENVOI À LA VUE
+         *  ========================= */
         return view('dashboard.index', compact(
+            'month',
+            'year',
+            'day',
+
+            // Facturation
             'proformasMonthCount',
             'recuMonthCount',
             'recuMonthSum',
+            'recuDaySum',
             'proformasMonthSum',
             'recuYearSum',
-            'recentDocuments',
+
+            // Courbe
+            'chartLabels',
+            'chartRecu',
+            'chartProforma',
+
+            // Clients
             'clientsCount',
-            'settings',
-            'maxMonth',
-            'minMonth',
-            'month',
-            'year'
+
+            // Stock
+            'produitsCount',
+            'stockTotal',
+            'produitsCritiquesCount',
+            'entreesStockMonth',
+            'sortiesStockMonth',
+
+            // Listes
+            'produitsCritiques',
+            'topProduitsSortie',
+            'recentFactures',
+            'recentMouvements'
         ));
     }
 
-    public function exportExcel(Request $request)
+    /** =========================
+     *  RAPPORT PDF
+     *  ========================= */
+    public function exportPdf(Request $request, $period = 'daily')
     {
-        $month = $request->month ?? now()->format('Y-m');
-        $year  = $request->year ?? now()->year;
+        $date = $request->date ? Carbon::parse($request->date) : now();
+        $start = $end = $date;
 
-        return Excel::download(
-            new DashboardStatsExport($month, $year),
-            "dashboard_stats_{$month}.xlsx"
-        );
+        if ($period === 'daily') {
+            $start = $date->copy()->startOfDay();
+            $end   = $date->copy()->endOfDay();
+        } elseif ($period === 'monthly') {
+            $start = $date->copy()->startOfMonth();
+            $end   = $date->copy()->endOfMonth();
+        } elseif ($period === 'yearly') {
+            $start = $date->copy()->startOfYear();
+            $end   = $date->copy()->endOfYear();
+        }
+
+        $factures = Facture::with('client')
+            ->where('type_document', 'recu')
+            ->whereBetween('created_at', [$start, $end])
+            ->get();
+
+        $total = $factures->sum('total');
+
+        $pdf = PDF::loadView('reports.sales', compact('factures', 'total', 'period', 'start', 'end'));
+
+        return $pdf->stream("rapport_{$period}.pdf");
     }
 }

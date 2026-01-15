@@ -31,6 +31,12 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 Route::get('/dashboard/export-excel', [DashboardController::class, 'exportExcel'])
     ->name('dashboard.exportExcel');
 
+    //Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+// Export PDF (journalier, mensuel, annuel)
+Route::get('/dashboard/export-pdf/{period}', [DashboardController::class, 'exportPdf'])
+    ->name('dashboard.exportPdf');
+
 /*
 |--------------------------------------------------------------------------
 | Clients

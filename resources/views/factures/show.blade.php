@@ -54,7 +54,7 @@
 
             <!-- Actions -->
             <div class="d-flex justify-content-between mb-4">
-                <a href="{{ route('factures.index') }}" class="btn btn-link">Retour</a>
+                <a href="{{ url()->previous() }}" class="btn btn-link">Retour</a>
 
                 <div class="d-flex gap-2">
                     @if($facture->type_document === 'pro-forma' && $facture->modifiable)
@@ -67,48 +67,6 @@
                         Imprimer
                     </a>
                 </div>
-            </div>
-
-            <!-- 🔍 Historique & traçabilité -->
-            <hr>
-            <h5 class="mb-3">Historique des actions</h5>
-
-            <div class="table-responsive">
-                <table class="table table-sm table-hover">
-                    <thead class="text-muted small">
-                        <tr>
-                            <th>Date</th>
-                            <th>Utilisateur</th>
-                            <th>Action</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse(
-                            \App\Models\ActivityLog::where('model_type', \App\Models\Facture::class)
-                                ->where('model_id', $facture->id)
-                                ->latest()
-                                ->get()
-                        as $log)
-                            <tr>
-                                <td>{{ $log->created_at->format('d/m/Y H:i') }}</td>
-                                <td>{{ $log->user->name ?? 'Système' }}</td>
-                                <td>
-                                    <span class="badge bg-secondary text-uppercase">
-                                        {{ $log->action }}
-                                    </span>
-                                </td>
-                                <td>{{ $log->description }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    Aucun historique pour ce document.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
             </div>
 
         </div>
