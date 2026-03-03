@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Client;
+use App\Services\ActivityLogger;
 
 class ClientController extends Controller
 {
@@ -16,9 +17,15 @@ class ClientController extends Controller
             $query->where('telephone', 'like', "%{$search}%");
         }
 
-        $clients = $query->orderBy('nom')->orderBy('prenom')->get();
+        $clients = $query->orderBy('nom')->orderBy('prenom')->paginate(10);
 
         return view('clients.index', compact('clients'));
+    }
+
+    public function show(Client $client)
+    {
+        $client->load('factures');
+        return view('clients.show', compact('client'));
     }
 
     public function create()
@@ -39,7 +46,13 @@ class ClientController extends Controller
         $data['nom'] = strtoupper($data['nom']);
         $data['prenom'] = ucfirst(strtolower($data['prenom']));
 
-        Client::create($data);
+        $client = Client::create($data);
+
+        // Enregistrer l'activité
+        ActivityLogger::created(
+            $client,
+            "Ajout du client {$client->nomComplet}"
+        );
 
         return redirect()->route('clients.index')->with('success', 'Client ajouté avec succès !');
     }
@@ -58,18 +71,46 @@ class ClientController extends Controller
             'adresse' => 'nullable|string|max:255',
         ]);
 
+        $oldData = [
+            'nom' => $client->nom,
+            'prenom' => $client->prenom,
+            'telephone' => $client->telephone,
+        ];
+
         $data = $request->only('nom', 'prenom', 'telephone', 'adresse');
         $data['nom'] = strtoupper($data['nom']);
         $data['prenom'] = ucfirst(strtolower($data['prenom']));
 
         $client->update($data);
 
+        // Enregistrer l'activité
+        ActivityLogger::updated(
+            $client,
+            "Modification du client {$client->nomComplet}",
+            null,
+            $oldData
+        );
+
         return redirect()->route('clients.index')->with('success', 'Client modifié avec succès !');
     }
 
     public function destroy(Client $client)
     {
+        // Only admin can delete clients
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->route('clients.index')->with('error', 'Vous n\'avez pas le droit de supprimer des clients.');
+        }
+
+        $clientName = $client->nomComplet;
+        
         $client->delete();
+
+        // Enregistrer l'activité
+        ActivityLogger::deleted(
+            $client,
+            "Suppression du client {$clientName}"
+        );
+
         return redirect()->route('clients.index')->with('success', 'Client supprimé !');
     }
 }

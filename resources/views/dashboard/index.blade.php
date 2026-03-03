@@ -1,239 +1,243 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'Tableau de bord')
 
 @section('content')
-<div class="container-fluid">
-
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h4 mb-0">Dashboard</h1>
-            <small class="text-muted">
-                Vue globale – {{ $month->translatedFormat('F Y') }}
-            </small>
-        </div>
-
-        <form method="GET" class="d-flex gap-2">
-            <input type="month" name="month" class="form-control" value="{{ $month->format('Y-m') }}">
-            <button class="btn btn-primary">Filtrer</button>
-        </form>
+{{-- Page Header --}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Tableau de bord</h1>
+        <p class="page-subtitle">{{ now()->translatedFormat('l d F Y') }}</p>
     </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ route('factures.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Nouveau recu
+        </a>
+        <a href="{{ route('factures.create', ['type' => 'pro-forma']) }}" class="btn btn-outline-primary">
+            <i class="bi bi-file-earmark-plus me-1"></i> Nouveau devis
+        </a>
+    </div>
+</div>
 
-    <!-- KPI FACTURATION -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <div class="text-muted small">Pro-forma ce mois</div>
-                <div class="h5 fw-bold">{{ $proformasMonthCount }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <div class="text-muted small">Reçus ce mois</div>
-                <div class="h5 fw-bold">{{ $recuMonthCount }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <div class="text-muted small">Montant encaissé ce mois</div>
-                <div class="h5 fw-bold">{{ number_format($recuMonthSum, 0, ',', ' ') }} FCFA</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <div class="text-muted small">Total annuel encaissé</div>
-                <div class="h5 fw-bold">{{ number_format($recuYearSum, 0, ',', ' ') }} FCFA</div>
+{{-- Admin Statistics Cards --}}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ $proformasMonthCount }}</div>
+                    <div class="stat-label">Devis ce mois</div>
+                </div>
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- KPI CLIENTS & STOCK -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <div class="text-muted small">Clients</div>
-                <div class="h5 fw-bold">{{ $clientsCount }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <div class="text-muted small">Produits</div>
-                <div class="h5 fw-bold">{{ $produitsCount }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <div class="text-muted small">Stock total</div>
-                <div class="h5 fw-bold">{{ $stockTotal }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3 border-danger">
-                <div class="text-muted small">Produits en alerte</div>
-                <div class="h5 fw-bold text-danger">{{ $produitsCritiquesCount }}</div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ $recuMonthCount }}</div>
+                    <div class="stat-label">Recus ce mois</div>
+                </div>
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- COURBE CHIFFRE D'AFFAIRES -->
-    <div class="card shadow-sm p-3 mb-4">
-        <h5 class="mb-3">📈 Évolution du chiffre d'affaires</h5>
-        <canvas id="caChart" height="120"></canvas>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card success">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ number_format($recuMonthSum, 0, ',', ' ') }}</div>
+                    <div class="stat-label">Encaissement (CFA)</div>
+                </div>
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="bi bi-currency-exchange"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- BOUTONS EXPORT PDF -->
-    <div class="mb-4">
-        <a href="{{ route('dashboard.exportPdf', ['period' => 'daily', 'date' => now()->format('Y-m-d')]) }}" class="btn btn-primary">Rapport Journalier</a>
-        <a href="{{ route('dashboard.exportPdf', ['period' => 'monthly', 'date' => now()->format('Y-m-d')]) }}" class="btn btn-success">Rapport Mensuel</a>
-        <a href="{{ route('dashboard.exportPdf', ['period' => 'yearly', 'date' => now()->format('Y-m-d')]) }}" class="btn btn-warning">Rapport Annuel</a>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card {{ $produitsCritiquesCount > 0 ? 'danger' : 'success' }}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ $produitsCritiquesCount }}</div>
+                    <div class="stat-label">Produits en alerte</div>
+                </div>
+                <div class="stat-icon {{ $produitsCritiquesCount > 0 ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }}">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- PRODUITS EN ALERTE & TOP SORTIES -->
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm p-3">
-                <h5>⚠️ Produits en alerte</h5>
-                <table class="table table-sm">
-                    <thead class="text-muted small">
-                        <tr><th>Produit</th><th>Stock</th><th>Seuil</th></tr>
-                    </thead>
-                    <tbody>
-                        @forelse($produitsCritiques as $produit)
+{{-- Revenue Chart --}}
+<div class="modern-card mb-4">
+    <div class="card-header">
+        <i class="bi bi-graph-up me-2"></i>Evolution du chiffre d'affaires
+    </div>
+    <div class="card-body">
+        <div style="height: 300px;">
+            <canvas id="caChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{{-- Recent Invoices --}}
+<div class="modern-card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-file-text me-2"></i>Documents recents</span>
+        <a href="{{ route('factures.index') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-right"></i> Voir tout
+        </a>
+    </div>
+    <div class="card-body p-0">
+        @if($recentFactures->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
                         <tr>
-                            <td>{{ $produit->nom }}</td>
-                            <td class="text-danger fw-bold">{{ $produit->stock }}</td>
-                            <td>{{ $produit->seuil_alerte }}</td>
+                            <th>Numero</th>
+                            <th>Client</th>
+                            <th>Type</th>
+                            <th class="text-end">Total</th>
+                            <th>Date</th>
+                            <th></th>
                         </tr>
-                        @empty
-                        <tr><td colspan="3" class="text-center text-muted">Aucun produit critique</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card shadow-sm p-3">
-                <h5>🔥 Produits les plus vendus</h5>
-                <table class="table table-sm">
-                    <thead class="text-muted small">
-                        <tr><th>Produit</th><th>Quantité sortie</th></tr>
                     </thead>
-                    <tbody>
-                        @forelse($topProduitsSortie as $item)
-                        <tr>
-                            <td>{{ $item->produit->nom ?? '—' }}</td>
-                            <td class="fw-bold">{{ $item->total }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="2" class="text-center text-muted">Aucune donnée</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ACTIVITÉS RÉCENTES -->
-    <div class="row g-4 mt-1">
-        <div class="col-md-6">
-            <div class="card shadow-sm p-3">
-                <h5>🧾 Dernières factures</h5>
-                <table class="table table-sm">
-                    <thead class="text-muted small"><tr><th>Numéro</th><th>Total</th><th></th></tr></thead>
                     <tbody>
                         @foreach($recentFactures as $facture)
-                        <tr>
-                            <td>{{ $facture->numero_facture }}</td>
-                            <td>{{ number_format($facture->total, 0, ',', ' ') }} FCFA</td>
-                            <td class="text-end">
-                                <a href="{{ route('factures.show', $facture->id) }}" class="btn btn-sm btn-outline-primary">Voir</a>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td class="fw-semibold">{{ $facture->numero_facture }}</td>
+                                <td>{{ $facture->client->nom ?? '-' }} {{ $facture->client->prenom ?? '' }}</td>
+                                <td>
+                                    @if($facture->type_document === 'recu')
+                                        <span class="badge bg-success-subtle text-success">Recu</span>
+                                    @else
+                                        <span class="badge bg-warning-subtle text-warning">Pro-forma</span>
+                                    @endif
+                                </td>
+                                <td class="text-end fw-semibold">{{ number_format($facture->total, 0, ',', ' ') }} CFA</td>
+                                <td class="text-muted">{{ $facture->created_at->format('d/m/Y') }}</td>
+                                <td>
+                                    <a href="{{ route('factures.show', $facture->id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-        </div>
+        @else
+            <div class="empty-state">
+                <i class="bi bi-file-text"></i>
+                <h5>Aucun document</h5>
+                <p class="text-muted">Aucun document trouve.</p>
+                <a href="{{ route('factures.create') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>Creer un recu
+                </a>
+            </div>
+        @endif
+    </div>
+</div>
 
-        <div class="col-md-6">
-            <div class="card shadow-sm p-3">
-                <h5>📦 Mouvements de stock récents</h5>
-                <table class="table table-sm">
-                    <thead class="text-muted small"><tr><th>Produit</th><th>Type</th><th>Qté</th></tr></thead>
-                    <tbody>
-                        @foreach($recentMouvements as $mvt)
+{{-- Products Alert --}}
+@if($produitsCritiquesCount > 0)
+<div class="modern-card mb-4 border-danger">
+    <div class="card-header bg-danger-subtle text-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>Produits en alerte de stock
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th class="text-end">Stock actuel</th>
+                        <th class="text-end">Seuil d'alerte</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($produitsCritiques as $produit)
                         <tr>
-                            <td>{{ $mvt->produit->nom ?? '—' }}</td>
+                            <td class="fw-semibold">{{ $produit->nom }}</td>
+                            <td class="text-end text-danger fw-bold">{{ $produit->stock }}</td>
+                            <td class="text-end">{{ $produit->seuil_alerte }}</td>
                             <td>
-                                <span class="badge {{ $mvt->type == 'entree' ? 'bg-success' : 'bg-danger' }}">
-                                    {{ ucfirst($mvt->type) }}
-                                </span>
+                                <a href="{{ route('produits.reapprovisionnement', $produit->id) }}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-plus-circle me-1"></i>Reapprovisionner
+                                </a>
                             </td>
-                            <td>{{ $mvt->quantite }}</td>
                         </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
-
 </div>
+@endif
 @endsection
 
+{{-- Chart Script --}}
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('caChart').getContext('2d');
-    const caChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($chartLabels) !!}, // ex: ['01 Jan', '02 Jan', ...]
-            datasets: [
-                {
-                    label: 'Reçus encaissés',
-                    data: {!! json_encode($chartRecu) !!},
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
-                    fill: true,
-                    tension: 0.3
-                },
-                {
-                    label: 'Pro-forma',
-                    data: {!! json_encode($chartProforma) !!},
-                    borderColor: '#ffc107',
-                    backgroundColor: 'rgba(255, 193, 7, 0.2)',
-                    fill: true,
-                    tension: 0.3
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.formattedValue + ' FCFA';
-                        }
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('caChart');
+    if (ctx) {
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($chartLabels) !!},
+                datasets: [
+                    {
+                        label: 'Recus',
+                        data: {!! json_encode($chartRecu) !!},
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Devis',
+                        data: {!! json_encode($chartProforma) !!},
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
                     }
                 },
-                legend: { position: 'top' }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { callback: value => value.toLocaleString() + ' FCFA' }
-                },
-                x: {
-                    title: { display: true, text: 'Jour' }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' CFA';
+                            }
+                        }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+});
 </script>
 @endpush

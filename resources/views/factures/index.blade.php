@@ -64,10 +64,12 @@
                         </a>
 
                         @if($facture->type_document === 'pro-forma')
-                            <a href="{{ route('factures.edit', $facture->id) }}"
-                               class="btn btn-sm btn-secondary me-1">
-                                <i class="bi bi-pencil"></i> Modifier
-                            </a>
+                            @if(auth()->user()->isAdmin() || $facture->user_id === auth()->id())
+                                <a href="{{ route('factures.edit', $facture->id) }}"
+                                   class="btn btn-sm btn-secondary me-1">
+                                    <i class="bi bi-pencil"></i> Modifier
+                                </a>
+                            @endif
 
                             <form action="{{ route('factures.valider', $facture->id) }}"
                                   method="POST"
@@ -80,16 +82,20 @@
                                 </button>
                             </form>
 
-                            <form action="{{ route('factures.destroy', $facture->id) }}"
-                                  method="POST"
-                                  class="d-inline-block"
-                                  onsubmit="return confirm('Supprimer ce document ?');">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-danger">
-                                    <i class="bi bi-trash"></i> Supprimer
-                                </button>
-                            </form>
+                            @if(!$facture->isDefinitive())
+                                @if(auth()->user()->isAdmin() || $facture->user_id === auth()->id())
+                                    <form action="{{ route('factures.destroy', $facture->id) }}"
+                                          method="POST"
+                                          class="d-inline-block"
+                                          onsubmit="return confirm('Supprimer ce document ?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i> Supprimer
+                                        </button>
+                                    </form>
+                                @endif
+                            @endif
                         @endif
                     </td>
                 </tr>

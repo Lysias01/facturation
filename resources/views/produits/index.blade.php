@@ -1,51 +1,104 @@
 @extends('layouts.app')
 
-@section('title', 'Liste des produits')
+@section('title', 'Produits')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4">Produits</h1>
-    <a href="{{ route('produits.create') }}" class="btn btn-primary">Ajouter un produit</a>
+{{-- Page Header --}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Produits</h1>
+        <p class="page-subtitle">Gestion des produits et du stock</p>
+    </div>
+    @auth
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('produits.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Ajouter un produit
+            </a>
+        @endif
+    @endauth
 </div>
 
-<div class="card shadow-sm">
+{{-- Products Table --}}
+<div class="modern-card">
     <div class="card-body p-0">
-        <table class="table table-striped table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Nom</th>
-                    <th>Prix vente</th>
-                    <th>Prix achat</th>
-                    <th>Stock actuel</th>
-                    <th>Seuil</th>
-                    <th width="180">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($produits as $produit)
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
                     <tr>
-                        <td>{{ $produit->nom }}</td>
-                        <td>{{ number_format($produit->prix_vente,2,',',' ') }} CFA</td>
-                        <td>{{ number_format($produit->prix_achat,2,',',' ') }} CFA</td>
-                        <td>
-                            {{ $produit->stock_actuel }}
-                            @if($produit->stock_critique)
-                                <span class="badge bg-danger ms-1">⚠</span>
-                            @endif
-                        </td>
-                        <td>{{ $produit->seuil_alerte }}</td>
-                        <td>
-                            <a href="{{ route('produits.reapprovisionnement', $produit) }}" class="btn btn-sm btn-success">Réappro</a>
-                            <a href="{{ route('produits.mouvements', $produit->id) }}" class="btn btn-sm btn-info">Historique</a>
-                        </td>
+                        <th>Nom</th>
+                        <th class="text-end">Prix de vente</th>
+                        <th class="text-end">Prix d'achat</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Seuil</th>
+                        <th class="text-end">Actions</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">Aucun produit trouvé.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse($produits as $produit)
+                        <tr class="{{ $produit->enAlerte() ? 'table-warning' : '' }}">
+                            <td class="fw-semibold">{{ $produit->nom }}</td>
+                            <td class="text-end">{{ number_format($produit->prix_vente, 0, ',', ' ') }} CFA</td>
+                            <td class="text-end text-muted">{{ number_format($produit->prix_achat, 0, ',', ' ') }} CFA</td>
+                            <td class="text-center">
+                                <span class="fw-semibold {{ $produit->enAlerte() ? 'text-danger' : '' }}">
+                                    {{ $produit->stock_actuel }}
+                                </span>
+                                @if($produit->enAlerte())
+                                    <i class="bi bi-exclamation-triangle text-danger ms-1" title="Stock en alerte"></i>
+                                @endif
+                            </td>
+                            <td class="text-center text-muted">{{ $produit->seuil_alerte }}</td>
+                            <td class="text-end">
+                                <div class="action-buttons justify-content-end">
+                                    <a href="{{ route('produits.show', $produit->id) }}" 
+                                       class="btn btn-sm btn-outline-info"
+                                       title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('produits.mouvements', $produit->id) }}" 
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="Mouvements">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
+                                    @auth
+                                        @if(auth()->user()->isAdmin())
+                                            <a href="{{ route('produits.reapprovisionnement', $produit->id) }}" 
+                                               class="btn btn-sm btn-outline-success"
+                                               title="Reapprovisionner">
+                                                <i class="bi bi-plus-circle"></i>
+                                            </a>
+                                        @endif
+                                    @endauth
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="bi bi-box-seam"></i>
+                                    <h5>Aucun produit</h5>
+                                    <p class="text-muted">Aucun produit trouve.</p>
+                                    @auth
+                                        @if(auth()->user()->isAdmin())
+                                            <a href="{{ route('produits.create') }}" class="btn btn-primary btn-sm">
+                                                <i class="bi bi-plus-lg me-1"></i>Ajouter un produit
+                                            </a>
+                                        @endif
+                                    @endauth
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
+    
+    @if($produits->hasPages())
+    <div class="card-footer bg-white">
+        {{ $produits->links() }}
+    </div>
+    @endif
 </div>
 @endsection

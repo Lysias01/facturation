@@ -103,8 +103,7 @@
     <!-- CENTRE : logo -->
     <div class="logo">
         @if($settings?->logo)
-            <img src="{{ public_path('storage/'.$settings->logo) }}"
-                 style="max-height:90px;">
+            <img src="{{ public_path('logos/'.$settings->logo) }}" style="max-height:90px; max-width:150px;">
         @endif
     </div>
 
@@ -126,8 +125,10 @@
 
 <!-- TABLE DES OPÉRATIONS -->
 <table>
-    <h3 class="h5">Facture #{{ $facture->numero_facture }}</h3>
     <thead>
+        <tr>
+            <th colspan="4" class="text-center">Facture #{{ $facture->numero_facture }}</th>
+        </tr>
         <tr>
             <th>Produit</th>
             <th>Qté</th>

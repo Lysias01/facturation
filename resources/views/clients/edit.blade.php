@@ -1,56 +1,92 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier un client')
+@section('title', 'Modifier le client')
 
 @section('content')
+{{-- Page Header --}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Modifier le client</h1>
+        <p class="page-subtitle">Mettre a jour les informations du client</p>
+    </div>
+</div>
+
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <h1 class="h4 mb-3">Modifier le client</h1>
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="modern-card">
+            <div class="card-body">
+                <form action="{{ route('clients.update', $client->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
 
-        <form action="{{ route('clients.update', $client->id) }}" method="POST" class="card p-3 shadow-sm">
-            @csrf
-            @method('PUT')
+                    <div class="mb-3">
+                        <label for="nom" class="form-label">Nom</label>
+                        <input type="text" 
+                               name="nom" 
+                               id="nom"
+                               value="{{ old('nom', $client->nom) }}" 
+                               class="form-control @error('nom') is-invalid @enderror" 
+                               required
+                               pattern="[A-Za-zÀ-ÿ' \-]+"
+                               title="Seules les lettres, espaces, apostrophes et traits d'union sont autorises">
+                        @error('nom')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-            <div class="mb-3">
-                <label class="form-label">Nom</label>
-                <input type="text" name="nom" value="{{ old('nom', $client->nom) }}" class="form-control" required
-                    pattern="[A-Za-zÀ-ÿ' \-]+" title="Seules les lettres, espaces, apostrophes et traits d'union sont autorisés">
-                @error('nom')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+                    <div class="mb-3">
+                        <label for="prenom" class="form-label">Prenom(s)</label>
+                        <input type="text" 
+                               name="prenom" 
+                               id="prenom"
+                               value="{{ old('prenom', $client->prenom) }}" 
+                               class="form-control @error('prenom') is-invalid @enderror" 
+                               required
+                               pattern="[A-Za-zÀ-ÿ' \-]+"
+                               title="Seules les lettres, espaces, apostrophes et traits d'union sont autorises">
+                        @error('prenom')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="telephone" class="form-label">Telephone</label>
+                        <input type="text" 
+                               name="telephone" 
+                               id="telephone"
+                               value="{{ old('telephone', $client->telephone) }}" 
+                               class="form-control @error('telephone') is-invalid @enderror" 
+                               required
+                               pattern="^\+?\d+$"
+                               title="Seuls les chiffres et le signe + sont autorises">
+                        @error('telephone')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="adresse" class="form-label">Adresse <span class="text-muted">(optionnel)</span></label>
+                        <input type="text" 
+                               name="adresse" 
+                               id="adresse"
+                               value="{{ old('adresse', $client->adresse) }}" 
+                               class="form-control @error('adresse') is-invalid @enderror">
+                        @error('adresse')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i> Mettre a jour
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label">Prénom(s)</label>
-                <input type="text" name="prenom" value="{{ old('prenom', $client->prenom) }}" class="form-control" required
-                    pattern="[A-Za-zÀ-ÿ' \-]+" title="Seules les lettres, espaces, apostrophes et traits d'union sont autorisés">
-                @error('prenom')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Téléphone</label>
-                <input type="text" name="telephone" value="{{ old('telephone', $client->telephone) }}" class="form-control" required
-                    pattern="^\+?\d+$" title="Seuls les chiffres et le signe + sont autorisés">
-                @error('telephone')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Adresse (optionnelle)</label>
-                <input type="text" name="adresse" value="{{ old('adresse', $client->adresse) }}" class="form-control">
-                @error('adresse')
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <a href="{{ route('clients.index') }}" class="btn btn-link">Annuler</a>
-                <button class="btn btn-primary">Mettre à jour</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 @endsection

@@ -162,11 +162,62 @@ class DashboardController extends Controller
         ));
     }
 
-    /** =========================
-     *  RAPPORT PDF
-     *  ========================= */
+    /**
+     * Dashboard Employé
+     */
+    public function employe()
+    {
+        $month = now();
+        $startOfMonth = $month->copy()->startOfMonth();
+        $endOfMonth = $month->copy()->endOfMonth();
+
+        // Stats for current month
+        $recuMonthCount = \App\Models\Facture::where('type_document', 'recu')
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->count();
+
+        $recuMonthSum = \App\Models\Facture::where('type_document', 'recu')
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->sum('total');
+
+        $produitsCount = \App\Models\Produit::count();
+        $clientsCount  = \App\Models\Client::count();
+        $facturesCount = \App\Models\Facture::count();
+        
+        // Mes factures récentes (celles créées par l'employé connecté)
+        $recentFactures = \App\Models\Facture::with('client')
+                            ->where('user_id', auth()->id())
+                            ->orderByDesc('created_at')
+                            ->limit(5)
+                            ->get();
+
+        // Clients récents
+        $recentClients = \App\Models\Client::orderByDesc('created_at')->limit(5)->get();
+
+        // Produits en alerte (stock <= seuil_alerte)
+        $produitsEnAlerte = \App\Models\Produit::whereColumn('stock', '<=', 'seuil_alerte')
+            ->orderBy('stock', 'asc')
+            ->get();
+
+        return view('dashboard.employe', compact(
+            'produitsCount',
+            'clientsCount',
+            'facturesCount',
+            'recentFactures',
+            'recentClients',
+            'recuMonthCount',
+            'recuMonthSum',
+            'produitsEnAlerte'
+        ));
+    }
+
+    /**
+     * Rapport PDF
+     */
     public function exportPdf(Request $request, $period = 'daily')
     {
+        // Vérification et valeur par défaut du paramètre period
+        $period = $period ?? 'daily';
         $date = $request->date ? Carbon::parse($request->date) : now();
         $start = $end = $date;
 

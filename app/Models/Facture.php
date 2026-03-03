@@ -11,6 +11,7 @@ class Facture extends Model
 
     protected $fillable = [
         'client_id',
+        'user_id',
         'type_document',   // pro-forma | recu
         'numero_facture',
         'total',
@@ -20,6 +21,11 @@ class Facture extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function lignes()

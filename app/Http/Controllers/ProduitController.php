@@ -3,15 +3,22 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\Produit;
 use App\Models\MouvementStock;
+use App\Services\ActivityLogger;
 
 class ProduitController extends Controller
 {
     public function index()
     {
-        $produits = Produit::all(); 
+        $produits = Produit::orderBy('nom')->paginate(10); 
         return view('produits.index', compact('produits'));
+    }
+
+    public function show(Produit $produit)
+    {
+        return view('produits.show', compact('produit'));
     }
 
     public function create()
@@ -23,26 +30,37 @@ class ProduitController extends Controller
     {
         $request->validate([
             'nom' => 'required|string|max:255|unique:produits,nom',
-            'prix_achat' => 'required|numeric|min:0.01',
-            'prix_vente' => 'required|numeric|min:0.01',
-            'stock' => 'required|integer|min:1',
-            'seuil_alerte' => 'required|integer|min:1',
+            'prix_achat' => 'required|integer|min:1',
+            'prix_vente' => 'required|integer|min:1',
+            'stock' => 'required|integer|min:0',
+            'seuil_alerte' => 'required|integer|min:0',
         ], [
             'nom.unique' => 'Ce produit existe déjà.'
         ]);
 
-        $produit = Produit::create($request->only([
-            'nom', 'prix_achat', 'prix_vente', 'seuil_alerte'
-        ]));
+        // Convert to integers for XOF currency
+        $produit = Produit::create([
+            'nom' => $request->nom,
+            'prix_achat' => (int) $request->prix_achat,
+            'prix_vente' => (int) $request->prix_vente,
+            'stock' => (int) $request->stock,
+            'seuil_alerte' => (int) $request->seuil_alerte,
+        ]);
 
         if ($request->stock > 0) {
             MouvementStock::create([
                 'produit_id' => $produit->id,
                 'type' => 'entree',
-                'quantite' => $request->stock,
+                'quantite' => (int) $request->stock,
                 'raison' => 'Stock initial',
             ]);
         }
+
+        // Enregistrer l'activité
+        ActivityLogger::created(
+            $produit,
+            "Création du produit {$produit->nom} - Stock initial: {$request->stock}"
+        );
 
         return redirect()->route('produits.index')
             ->with('success', 'Produit créé avec succès.');
@@ -63,18 +81,31 @@ class ProduitController extends Controller
                 'max:255',
                 Rule::unique('produits', 'nom')->ignore($produit->id),
             ],
-            'prix_achat' => 'required|numeric|min:0',
-            'prix_vente' => 'required|numeric|min:0',
-            'seuil_alerte' => 'required|integer|min:1',
+            'prix_achat' => 'required|integer|min:0',
+            'prix_vente' => 'required|integer|min:0',
+            'seuil_alerte' => 'required|integer|min:0',
             'stock' => 'nullable|integer|min:0',
         ]);
 
-        $produit->update($request->only([
-            'nom','prix_achat','prix_vente','seuil_alerte'
-        ]));
+        $oldData = [
+            'nom' => $produit->nom,
+            'prix_achat' => $produit->prix_achat,
+            'prix_vente' => $produit->prix_vente,
+            'stock' => $produit->stock_actuel,
+            'seuil_alerte' => $produit->seuil_alerte,
+        ];
 
+        // Convert to integers for XOF currency
+        $produit->update([
+            'nom' => $request->nom,
+            'prix_achat' => (int) $request->prix_achat,
+            'prix_vente' => (int) $request->prix_vente,
+            'seuil_alerte' => (int) $request->seuil_alerte,
+        ]);
+
+        $stockChanged = false;
         if ($request->filled('stock')) {
-            $diff = $request->stock - $produit->stock_actuel;
+            $diff = (int) $request->stock - $produit->stock_actuel;
 
             if ($diff !== 0) {
                 MouvementStock::create([
@@ -83,8 +114,17 @@ class ProduitController extends Controller
                     'quantite' => abs($diff),
                     'raison' => 'Ajustement stock',
                 ]);
+                $stockChanged = true;
             }
         }
+
+        // Enregistrer l'activité
+        ActivityLogger::updated(
+            $produit,
+            "Modification du produit {$produit->nom}" . ($stockChanged ? " - Stock ajusté" : ""),
+            null,
+            $oldData
+        );
 
         return redirect()->route('produits.index')
             ->with('success', 'Produit mis à jour.');
@@ -92,7 +132,16 @@ class ProduitController extends Controller
 
     public function destroy(Produit $produit)
     {
+        $produitName = $produit->nom;
+        
         $produit->delete();
+
+        // Enregistrer l'activité
+        ActivityLogger::deleted(
+            $produit,
+            "Suppression du produit {$produitName}"
+        );
+
         return redirect()->route('produits.index')->with('success','Produit supprimé avec succès.');
     }
 
@@ -113,12 +162,61 @@ class ProduitController extends Controller
                 'raison' => $request->raison ?? 'Réapprovisionnement',
             ]);
 
+            // Enregistrer l'activité
+            ActivityLogger::stockUpdate(
+                $produit,
+                "Réapprovisionnement du produit {$produit->nom} - Quantité: {$request->quantite}",
+                $request->quantite
+            );
+
             return redirect()->route('produits.index')
                              ->with('success', 'Stock réapprovisionné avec succès.');
         }
 
         // GET → afficher le formulaire
         return view('produits.reapprovisionnement', compact('produit'));
+    }
+
+    /**
+     * Ajustement de stock (pour pertes, dommages, inventaire, etc.)
+     */
+    public function ajustement(Request $request, Produit $produit)
+    {
+        if ($request->isMethod('post')) {
+
+            $request->validate([
+                'nouvelle_quantite' => 'required|integer|min:0',
+                'motif' => 'required|string|max:255',
+            ]);
+
+            $stockActuel = $produit->stock_actuel;
+            $nouvelleQuantite = $request->nouvelle_quantite;
+            $diff = $nouvelleQuantite - $stockActuel;
+
+            // Si pas de différence, on ne fait rien
+            if ($diff !== 0) {
+                // Créer le mouvement d'ajustement
+                MouvementStock::create([
+                    'produit_id' => $produit->id,
+                    'type' => $diff >= 0 ? 'entree' : 'sortie',
+                    'quantite' => abs($diff),
+                    'raison' => 'Ajustement: ' . $request->motif,
+                ]);
+
+                // Enregistrer l'activité
+                ActivityLogger::stockUpdate(
+                    $produit,
+                    "Ajustement stock du produit {$produit->nom} - {$request->motif} - Différence: " . ($diff > 0 ? "+" : "") . $diff,
+                    abs($diff)
+                );
+            }
+
+            return redirect()->route('produits.index')
+                             ->with('success', 'Stock ajusté avec succès.');
+        }
+
+        // GET → afficher le formulaire
+        return view('produits.ajustement', compact('produit'));
     }
 
     public function mouvements(Produit $produit)

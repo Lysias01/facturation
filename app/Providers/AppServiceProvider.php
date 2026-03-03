@@ -6,7 +6,11 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Setting;
 use App\Models\Facture;
+use App\Models\Client;
+use App\Models\Produit;
 use App\Observers\FactureObserver;
+use App\Observers\ClientObserver;
+use App\Observers\ProduitObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,9 +42,11 @@ class AppServiceProvider extends ServiceProvider
             $view->with('app_settings', $settings);
         });
 
-        /**
-         * 2️⃣ Observer Facture → Historique & traçabilité automatique
+/**
+         * 2️⃣ Observers → Historique & traçabilité automatique
          */
         Facture::observe(FactureObserver::class);
+        Client::observe(ClientObserver::class);
+        Produit::observe(ProduitObserver::class);
     }
 }

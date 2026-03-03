@@ -3,54 +3,121 @@
 @section('title', 'Clients')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Clients</h1>
-    <a href="{{ route('clients.create') }}" class="btn btn-primary">Ajouter un client</a>
+{{-- Page Header --}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Clients</h1>
+        <p class="page-subtitle">Gestion des clients</p>
+    </div>
+    <a href="{{ route('clients.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Ajouter un client
+    </a>
 </div>
 
-<form method="GET" action="{{ route('clients.index') }}" class="mb-3">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control" placeholder="Rechercher un client par son numéro de téléphone" value="{{ request('search') }}">
-        <button class="btn btn-outline-secondary" type="submit">Rechercher</button>
-        @if(request('search'))
-            <a href="{{ route('clients.index') }}" class="btn btn-outline-danger">Voir la liste</a>
-        @endif
+{{-- Search Form --}}
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('clients.index') }}" class="row g-3">
+            <div class="col-12 col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" 
+                           name="search" 
+                           class="form-control" 
+                           placeholder="Rechercher par numero de telephone..."
+                           value="{{ request('search') }}">
+                </div>
+            </div>
+            <div class="col-12 col-md-2">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-search me-1"></i> Rechercher
+                    </button>
+                    @if(request('search'))
+                        <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Nom</th>
-                <th>Prénom(s)</th>
-                <th>Téléphone</th>
-                <th>Adresse</th>
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($clients as $client)
-                <tr>
-                    <td>{{ $client->nom }}</td>
-                    <td>{{ $client->prenom }}</td>
-                    <td>{{ $client->telephone }}</td>
-                    <td>{{ $client->adresse ?? '-' }}</td>
-                    <td class="text-end">
-                        <a href="{{ route('clients.edit', $client->id) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
-                        <form action="{{ route('clients.destroy', $client->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Supprimer ce client ?');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger">Supprimer</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" class="text-center">Aucun client trouvé. Recherchez par son numéro de téléphone.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+{{-- Clients Table --}}
+<div class="modern-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prenom(s)</th>
+                        <th>Telephone</th>
+                        <th>Adresse</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($clients as $client)
+                        <tr>
+                            <td class="fw-semibold">{{ $client->nom }}</td>
+                            <td>{{ $client->prenom }}</td>
+                            <td>
+                                <a href="tel:{{ $client->telephone }}" class="text-decoration-none">
+                                    <i class="bi bi-telephone me-1"></i>{{ $client->telephone }}
+                                </a>
+                            </td>
+                            <td>{{ $client->adresse ?? '-' }}</td>
+                            <td class="text-end">
+                                <div class="action-buttons justify-content-end">
+                                    <a href="{{ route('clients.show', $client->id) }}" 
+                                       class="btn btn-sm btn-outline-info"
+                                       title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('clients.edit', $client->id) }}" 
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    @can('role', 'admin')
+                                        <form action="{{ route('clients.destroy', $client->id) }}" 
+                                              method="POST" 
+                                              class="d-inline"
+                                              onsubmit="return confirm('Voulez-vous vraiment supprimer ce client ?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <i class="bi bi-people"></i>
+                                    <h5>Aucun client trouve</h5>
+                                    <p class="text-muted">Recherchez par son numero de telephone.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    @if($clients->hasPages())
+    <div class="card-footer bg-white">
+        {{ $clients->links() }}
+    </div>
+    @endif
 </div>
 @endsection
