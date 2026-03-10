@@ -1,39 +1,43 @@
 FROM php:8.2-cli
 
-# Installer extensions et dépendances nécessaires
+# Installer dépendances système
 RUN apt-get update && apt-get install -y \
     git \
-    unzip \
-    libzip-dev \
-    zip \
     curl \
+    unzip \
+    zip \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
     npm \
-    libpq-dev \
     && docker-php-ext-install \
-        pdo \
-        pdo_mysql \
-        pdo_pgsql \
-        zip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    pdo \
+    pdo_mysql \
+    pdo_pgsql \
+    mbstring \
+    zip \
+    exif \
+    pcntl \
+    bcmath \
+    gd
 
-# Installer Composer depuis l'image officielle
+# Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Définir le répertoire de travail
+# Définir dossier de travail
 WORKDIR /app
 
-# Copier le projet
+# Copier projet
 COPY . .
 
-# Installer les dépendances PHP et optimiser l’autoloader
+# Installer dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# Installer et compiler les assets frontend
+# Installer et compiler assets
 RUN npm install && npm run build
 
-# Exposer le port de l’application
+# Exposer port Render
 EXPOSE 10000
 
-# Lancer le serveur Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
+# Lancer Laravel
+CMD php artisan serve --host=0.0.0.0 --port=10000
