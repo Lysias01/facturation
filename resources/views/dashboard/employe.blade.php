@@ -95,6 +95,45 @@
     </div>
 </div>
 
+{{-- Products Alert --}}
+@if($produitsEnAlerte->count() > 0)
+<div class="modern-card mb-4 border-danger">
+    <div class="card-header bg-danger-subtle text-danger d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span class="me-auto">Produits en alerte de stock</span>
+        <span class="badge bg-danger">{{ $produitsEnAlerte->count() }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th class="text-end">Stock</th>
+                        <th class="text-end d-none d-md-table-cell">Seuil</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($produitsEnAlerte as $produit)
+                        <tr>
+                            <td class="fw-semibold">{{ $produit->nom }}</td>
+                            <td class="text-end text-danger fw-bold">{{ $produit->stock }}</td>
+                            <td class="text-end d-none d-md-table-cell">{{ $produit->seuil_alerte }}</td>
+                            <td class="text-end">
+                                <a href="{{ route('produits.show', $produit->id) }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- Recent Clients --}}
 <div class="modern-card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">

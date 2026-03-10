@@ -2,7 +2,10 @@
 
 namespace App\Http;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class Kernel extends HttpKernel
 {
@@ -14,7 +17,8 @@ class Kernel extends HttpKernel
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
+        \App\Http\Middleware\TrustHosts::class,
+        \App\Http\Middleware\SecurityHeaders::class,
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
@@ -66,4 +70,25 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
+
+    /**
+     * Configure the rate limiters for the application.
+     */
+    protected function configureRateLimiting(): void
+    {
+        // Rate limit: 60 requests per minute for API
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Rate limit: 10 login attempts per minute
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Rate limit: 100 requests per minute for general use
+        RateLimiter::for('general', function (Request $request) {
+            return Limit::perMinute(100)->by($request->ip());
+        });
+    }
 }

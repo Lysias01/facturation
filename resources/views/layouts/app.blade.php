@@ -65,10 +65,17 @@
 
         .navbar-container {
             display: flex;
-            align-items: stretch;
+            align-items: center;
             justify-content: space-between;
-            padding: 0;
+            padding: 0 0.5rem;
             height: 50px;
+            width: 100%;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-container {
+                padding: 0 0.75rem;
+            }
         }
 
         .navbar-brand {
@@ -176,11 +183,25 @@
         .navbar-toggler {
             border: none;
             padding: 0.5rem;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
+            background: transparent;
+            color: var(--secondary-color);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 0.375rem;
+        }
+
+        .navbar-toggler:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: var(--primary-color);
         }
 
         .navbar-toggler:focus {
             box-shadow: none;
+            outline: none;
         }
 
         /* Cards */
@@ -449,33 +470,205 @@
             background: #a1a1a1;
         }
 
-        /* Mobile Responsive */
+        /* Mobile Overlay */
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .mobile-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Mobile Menu Header */
+        .navbar-menu-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fff;
+        }
+
+        .navbar-menu-title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .navbar-menu-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0.25rem 0.5rem;
+            line-height: 1;
+        }
+
+        .navbar-menu-close:hover {
+            color: #333;
+        }
+
+        /* Mobile User Section */
+        .mobile-user-section {
+            display: none;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            margin-top: auto;
+        }
+
+        .mobile-user-section .user-info {
+            margin-bottom: 1rem;
+        }
+
+        /* Prevent body scroll when menu is open */
+        body.menu-open {
+            overflow: hidden;
+        }
+
+        /* Mobile Responsive - Slide-in Sidebar Menu */
         @media (max-width: 991.98px) {
-            .navbar-menu {
+            /* Overlay background */
+            .mobile-overlay {
                 display: none;
-                position: absolute;
-                top: 60px;
+                position: fixed;
+                top: 0;
                 left: 0;
                 right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .mobile-overlay.show {
+                display: block;
+                opacity: 1;
+            }
+
+            /* Sidebar menu - slides from right */
+            .navbar-menu {
+                display: block;
+                position: fixed;
+                top: 0;
+                right: -280px;
+                width: 280px;
+                height: 100vh;
                 background: #ffffff;
-                padding: 1rem;
+                padding: 1.5rem 1rem;
                 flex-direction: column;
-                box-shadow: var(--card-shadow);
-                gap: 0.25rem;
+                z-index: 1000;
+                transition: right 0.3s ease;
+                overflow-y: auto;
+                box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
             }
 
             .navbar-menu.show {
+                right: 0;
+            }
+
+            /* Sidebar header with close button */
+            .navbar-menu-header {
                 display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .navbar-menu-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: #212529;
+                margin: 0;
+            }
+
+            .navbar-menu-close {
+                width: 36px;
+                height: 36px;
+                border: none;
+                background: #f8f9fa;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.25rem;
+                color: #6c757d;
+                transition: all 0.2s ease;
+            }
+
+            .navbar-menu-close:hover {
+                background: #e9ecef;
+                color: #212529;
             }
 
             .navbar-menu .nav-item {
                 width: 100%;
+                margin-bottom: 0.5rem;
             }
 
+            /* Menu links - full width cards */
             .navbar-menu .nav-link {
-                padding: 0.75rem 1rem !important;
+                display: flex !important;
+                align-items: center;
+                gap: 0.875rem;
+                padding: 0.875rem 1rem !important;
+                border-radius: 10px;
+                width: 100%;
+                text-align: left;
+                justify-content: flex-start;
+                font-size: 0.95rem;
+                height: auto;
+                background: #f8f9fa;
+                color: #495057 !important;
+                border: none;
+                transition: all 0.2s ease;
             }
 
+            .navbar-menu .nav-link:hover {
+                background: #e7f1ff;
+                color: #0d6efd !important;
+            }
+
+            .navbar-menu .nav-link i {
+                font-size: 1.2rem;
+                width: 24px;
+                text-align: center;
+                color: #6c757d;
+                transition: color 0.2s ease;
+            }
+
+            .navbar-menu .nav-link:hover i {
+                color: #0d6efd;
+            }
+
+            /* Active menu item */
+            .navbar-menu .nav-link.active {
+                background: #0d6efd !important;
+                color: #ffffff !important;
+                font-weight: 600;
+            }
+
+            .navbar-menu .nav-link.active i {
+                color: #ffffff !important;
+            }
+
+            /* User section at bottom of sidebar */
             .navbar-user {
                 display: none;
             }
@@ -483,17 +676,120 @@
             .navbar-user.show {
                 display: flex;
                 position: absolute;
-                top: auto;
-                bottom: -60px;
-                right: 1rem;
+                bottom: 0;
+                left: 0;
+                right: 0;
                 background: #ffffff;
-                padding: 0.5rem;
-                border-radius: 0.5rem;
-                box-shadow: var(--card-shadow);
+                padding: 1rem;
+                border-top: 1px solid #e9ecef;
+                flex-direction: column;
+                gap: 0.75rem;
             }
 
             .mobile-menu-btn {
-                display: block;
+                display: flex !important;
+            }
+
+            /* Main content when menu is open */
+            body.menu-open {
+                overflow: hidden;
+            }
+
+            /* Show close button on sidebar */
+            .navbar-menu .close-btn {
+                display: flex;
+            }
+
+            footer {
+                display: none !important;
+            }
+
+            /* Page header mobile */
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .page-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Stats cards mobile */
+            .stat-card {
+                padding: 0.875rem;
+            }
+
+            .stat-card .stat-value {
+                font-size: 1.25rem;
+            }
+
+            .stat-card .stat-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+
+            /* Table mobile improvements */
+            .table {
+                font-size: 0.8125rem;
+            }
+
+            .table thead th,
+            .table tbody td {
+                padding: 0.5rem 0.375rem;
+            }
+
+            /* Form mobile */
+            .form-label {
+                font-size: 0.8125rem;
+            }
+
+            .form-control, .form-select {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            /* Action buttons mobile */
+            .action-buttons {
+                gap: 0.125rem;
+            }
+
+            .action-buttons .btn {
+                padding: 0.25rem 0.375rem;
+                font-size: 0.75rem;
+            }
+
+            /* Card mobile */
+            .modern-card .card-body {
+                padding: 0.875rem;
+            }
+
+            /* Footer mobile */
+            footer {
+                font-size: 0.75rem;
+                padding: 0.5rem 0;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 575.98px) {
+            .page-title {
+                font-size: 1.25rem;
+            }
+
+            .btn {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            .h4, h4 {
+                font-size: 1rem;
+            }
+
+            .h5, h5 {
+                font-size: 0.875rem;
             }
         }
 
@@ -668,7 +964,17 @@
 
             {{-- Horizontal Navigation Menu --}}
             @auth
+            <!-- Mobile Overlay -->
+            <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+            
+            <!-- Sidebar Menu -->
             <ul class="navbar-menu" id="mainMenu">
+                <div class="navbar-menu-header">
+                    <h5 class="navbar-menu-title">Menu</h5>
+                    <button class="navbar-menu-close" onclick="closeMobileMenu()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" 
                        href="{{ auth()->user()->isAdmin() ? route('dashboard') : route('dashboard.employe') }}">
@@ -718,9 +1024,29 @@
                     </a>
                 </li>
                 @endif
+
+                <!-- Mobile User Section (inside sidebar) -->
+                <div class="mobile-user-section">
+                    <div class="user-info">
+                        <span class="user-badge {{ auth()->user()->isAdmin() ? 'admin' : 'employe' }}">
+                            <i class="bi bi-person-circle"></i>
+                            {{ auth()->user()->name }}
+                            @if(auth()->user()->isAdmin())
+                                <i class="bi bi-shield-check"></i>
+                            @endif
+                        </span>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-box-arrow-right me-2"></i>
+                            Deconnexion
+                        </button>
+                    </form>
+                </div>
             </ul>
 
-            {{-- User Menu --}}
+            {{-- User Menu (shown on desktop) --}}
             <div class="navbar-user" id="userMenu">
                 <span class="user-badge {{ auth()->user()->isAdmin() ? 'admin' : 'employe' }}">
                     <i class="bi bi-person-circle"></i>
@@ -744,9 +1070,27 @@
     {{-- Mobile Menu Script --}}
     <script>
         function toggleMobileMenu() {
-            document.getElementById('mainMenu').classList.toggle('show');
-            document.getElementById('userMenu').classList.toggle('show');
+            const menu = document.getElementById('mainMenu');
+            const overlay = document.getElementById('mobileOverlay');
+            menu.classList.toggle('show');
+            overlay.classList.toggle('show');
+            document.body.classList.toggle('menu-open');
         }
+
+        function closeMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            const overlay = document.getElementById('mobileOverlay');
+            menu.classList.remove('show');
+            overlay.classList.remove('show');
+            document.body.classList.remove('menu-open');
+        }
+
+        // Close menu on resize to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 991.98) {
+                closeMobileMenu();
+            }
+        });
     </script>
 
     {{-- Main Content --}}

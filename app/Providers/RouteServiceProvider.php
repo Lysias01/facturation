@@ -2,10 +2,7 @@
 
 namespace App\Providers;
 
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
@@ -24,9 +21,18 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
+        // Force HTTPS in production only
+        if (env('FORCE_HTTPS', false) && env('APP_ENV') === 'production') {
+            $this->app['url']->forceScheme('https');
+            $this->app['request']->setTrustedProxies(
+                $this->app['request']->getClientIps(),
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO |
+                \Illuminate\Http\Request::HEADER_FORWARDED
+            );
+        }
 
         $this->routes(function () {
             Route::middleware('api')

@@ -25,7 +25,7 @@ class FactureController extends Controller
                 )->orWhere('numero_facture', 'like', "%$search%");
             })
             ->orderByDesc('id')
-            ->get();
+            ->paginate(10);
 
         return view('factures.index', compact('factures'));
     }

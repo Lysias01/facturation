@@ -25,8 +25,12 @@ return [
     |--------------------------------------------------------------------------
     | Session Encryption
     |--------------------------------------------------------------------------
+    |
+    | This option enables or disables the encryption of session data. This is
+    | recommended for production environments to protect session data.
+    |
     */
-    'encrypt' => false,
+    'encrypt' => env('SESSION_ENCRYPT', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -92,7 +96,7 @@ return [
     |--------------------------------------------------------------------------
     | HTTPS Only Cookies
     |--------------------------------------------------------------------------
-    | Désactivé pour le développement local en HTTP
+    | Should be true in production for secure HTTPS cookies
     */
     'secure' => env('SESSION_SECURE_COOKIE', false),
 

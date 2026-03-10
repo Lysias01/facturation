@@ -7,14 +7,14 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Tableau de bord</h1>
-        <p class="page-subtitle">{{ now()->translatedFormat('l d F Y') }}</p>
+        <p class="page-subtitle d-none d-sm-block">{{ now()->translatedFormat('l d F Y') }}</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ route('factures.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> Nouveau recu
+        <a href="{{ route('factures.create') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i><span class="d-none d-md-inline">Nouveau recu</span>
         </a>
-        <a href="{{ route('factures.create', ['type' => 'pro-forma']) }}" class="btn btn-outline-primary">
-            <i class="bi bi-file-earmark-plus me-1"></i> Nouveau devis
+        <a href="{{ route('factures.create', ['type' => 'pro-forma']) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-file-earmark-plus me-1"></i><span class="d-none d-md-inline">Nouveau devis</span>
         </a>
     </div>
 </div>
@@ -77,6 +77,45 @@
         </div>
     </div>
 </div>
+
+{{-- Products Alert --}}
+@if($produitsCritiquesCount > 0)
+<div class="modern-card mb-4 border-danger">
+    <div class="card-header bg-danger-subtle text-danger d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span class="me-auto">Produits en alerte de stock</span>
+        <span class="badge bg-danger">{{ $produitsCritiquesCount }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th class="text-end">Stock</th>
+                        <th class="text-end d-none d-md-table-cell">Seuil</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($produitsCritiques as $produit)
+                        <tr>
+                            <td class="fw-semibold">{{ $produit->nom }}</td>
+                            <td class="text-end text-danger fw-bold">{{ $produit->stock }}</td>
+                            <td class="text-end d-none d-md-table-cell">{{ $produit->seuil_alerte }}</td>
+                            <td class="text-end">
+                                <a href="{{ route('produits.reapprovisionnement', $produit->id) }}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-plus-circle"></i><span class="d-none d-md-inline ms-1">Reapprovisionner</span>
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- Revenue Chart --}}
 <div class="modern-card mb-4">
@@ -148,43 +187,6 @@
         @endif
     </div>
 </div>
-
-{{-- Products Alert --}}
-@if($produitsCritiquesCount > 0)
-<div class="modern-card mb-4 border-danger">
-    <div class="card-header bg-danger-subtle text-danger">
-        <i class="bi bi-exclamation-triangle me-2"></i>Produits en alerte de stock
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Produit</th>
-                        <th class="text-end">Stock actuel</th>
-                        <th class="text-end">Seuil d'alerte</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($produitsCritiques as $produit)
-                        <tr>
-                            <td class="fw-semibold">{{ $produit->nom }}</td>
-                            <td class="text-end text-danger fw-bold">{{ $produit->stock }}</td>
-                            <td class="text-end">{{ $produit->seuil_alerte }}</td>
-                            <td>
-                                <a href="{{ route('produits.reapprovisionnement', $produit->id) }}" class="btn btn-sm btn-warning">
-                                    <i class="bi bi-plus-circle me-1"></i>Reapprovisionner
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-@endif
 @endsection
 
 {{-- Chart Script --}}
@@ -241,3 +243,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+

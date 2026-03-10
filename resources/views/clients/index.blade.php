@@ -7,10 +7,10 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Clients</h1>
-        <p class="page-subtitle">Gestion des clients</p>
+        <p class="page-subtitle d-none d-sm-block">Gestion des clients</p>
     </div>
-    <a href="{{ route('clients.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> Ajouter un client
+    <a href="{{ route('clients.create') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Ajouter</span>
     </a>
 </div>
 
@@ -116,7 +116,21 @@
     
     @if($clients->hasPages())
     <div class="card-footer bg-white">
-        {{ $clients->links() }}
+        <nav>
+            <ul class="pagination justify-content-center mb-0" style="flex-wrap: wrap;">
+                @foreach ($clients->links()->elements as $element)
+                    @if (is_array($element))
+                        @foreach ($element as $page => $url)
+                            @if ($page == $clients->currentPage())
+                                <li class="page-item active"><span class="page-link" style="background-color: #0d6efd; border-color: #0d6efd;">{{ $page }}</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $url }}" style="color: #0d6efd;">{{ $page }}</a></li>
+                            @endif
+                        @endforeach
+                    @endif
+                @endforeach
+            </ul>
+        </nav>
     </div>
     @endif
 </div>

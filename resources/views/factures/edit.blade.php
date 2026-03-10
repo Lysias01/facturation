@@ -73,14 +73,14 @@
 
                     {{-- Lines Table --}}
                     <div class="table-responsive mb-3">
-                        <table class="table table-bordered mb-0" id="lignes_table">
+                        <table class="table table-bordered table-sm mb-0" id="lignes_table">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Produit</th>
-                                    <th style="width:120px;">Quantite</th>
-                                    <th style="width:150px;">Prix unitaire</th>
-                                    <th style="width:150px;">Total</th>
-                                    <th style="width:80px;"></th>
+                                    <th style="min-width:150px;">Produit</th>
+                                    <th style="min-width:80px;">Qte</th>
+                                    <th style="min-width:100px;">Prix</th>
+                                    <th style="min-width:100px;">Total</th>
+                                    <th style="width:50px;"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -135,14 +135,14 @@
                         </table>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <button type="button" id="add_ligne" class="btn btn-outline-secondary">
-                            <i class="bi bi-plus-lg me-1"></i> Ajouter une ligne
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <button type="button" id="add_ligne" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Ajouter
                         </button>
                         
                         <div class="text-end">
-                            <span class="text-muted d-block" style="font-size: 0.875rem;">Total</span>
-                            <span class="h4 mb-0 fw-bold"><span id="total_facture">0.00</span> CFA</span>
+                            <span class="text-muted d-block" style="font-size: 0.75rem;">Total</span>
+                            <span class="h5 mb-0 fw-bold"><span id="total_facture">0</span> CFA</span>
                         </div>
                     </div>
 
@@ -179,10 +179,10 @@ function recalculTotalGlobal(){
     let total = 0;
     document.querySelectorAll('#lignes_table tbody tr').forEach(r => {
         if (r.querySelector('.total_ligne')) {
-            total += parseFloat(r.querySelector('.total_ligne').value || 0);
+            total += parseInt(r.querySelector('.total_ligne').value || 0);
         }
     });
-    document.getElementById('total_facture').innerText = total.toFixed(2);
+    document.getElementById('total_facture').innerText = total.toLocaleString('fr-FR');
 }
 
 document.getElementById('add_ligne').addEventListener('click', () => {
@@ -195,10 +195,10 @@ document.getElementById('add_ligne').addEventListener('click', () => {
     });
 
     row.innerHTML = `
-        <td><select name="lignes[${index}][produit_id]" class="form-select select-produit" required>${options}</select></td>
-        <td><input type="number" name="lignes[${index}][quantite]" class="form-control quantite" value="1" min="1" required></td>
-        <td><input type="number" name="lignes[${index}][prix_unitaire]" class="form-control prix" value="0" readonly></td>
-        <td><input type="text" class="form-control total_ligne" value="0.00" readonly></td>
+        <td><select name="lignes[${index}][produit_id]" class="form-select form-select-sm select-produit" required>${options}</select></td>
+        <td><input type="number" name="lignes[${index}][quantite]" class="form-control form-control-sm quantite" value="1" min="1" required></td>
+        <td><input type="number" name="lignes[${index}][prix_unitaire]" class="form-control form-control-sm prix" value="0" readonly></td>
+        <td><input type="text" class="form-control form-control-sm total_ligne" value="0" readonly></td>
         <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove_ligne"><i class="bi bi-trash"></i></button></td>
     `;
 
@@ -213,8 +213,8 @@ document.addEventListener('change', e => {
         const selectedOption = e.target.selectedOptions[0];
         prixInput.value = selectedOption.dataset.prix || 0;
 
-        const q = parseFloat(row.querySelector('.quantite').value || 0);
-        row.querySelector('.total_ligne').value = (q * prixInput.value).toFixed(2);
+        const q = parseInt(row.querySelector('.quantite').value || 0);
+        row.querySelector('.total_ligne').value = q * prixInput.value;
 
         recalculTotalGlobal();
     }
@@ -223,9 +223,9 @@ document.addEventListener('change', e => {
 document.addEventListener('input', e => {
     if(e.target.classList.contains('quantite')) {
         const row = e.target.closest('tr');
-        const q = parseFloat(row.querySelector('.quantite').value || 0);
-        const p = parseFloat(row.querySelector('.prix').value || 0);
-        row.querySelector('.total_ligne').value = (q * p).toFixed(2);
+        const q = parseInt(row.querySelector('.quantite').value || 0);
+        const p = parseInt(row.querySelector('.prix').value || 0);
+        row.querySelector('.total_ligne').value = q * p;
         recalculTotalGlobal();
     }
 });

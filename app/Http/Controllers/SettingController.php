@@ -56,7 +56,7 @@ class SettingController extends Controller
         $settings->country = $request->country;
         $settings->national_motto = $request->national_motto;
 
-        // Upload du logo - on stocke directement dans public/logos pour éviter les problèmes de symlink
+        // Upload du logo - securisation stricte
         if ($request->hasFile('logo')) {
             // Supprimer l'ancien logo s'il existe
             if ($settings->logo) {
@@ -65,9 +65,28 @@ class SettingController extends Controller
                     unlink($oldPath);
                 }
             }
-            // Stocker le nouveau logo dans public/logos/
+            
+            // Validation stricte du fichier
             $file = $request->file('logo');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $originalName = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            
+            // Verifier l'extension
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (!in_array(strtolower($extension), $allowedExtensions)) {
+                return back()->withErrors(['logo' => 'Format non autorise. Formats acceptes: jpg, jpeg, png, gif, webp']);
+            }
+            
+            // Verifier le type MIME reel
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!in_array($file->getMimeType(), $allowedMimes)) {
+                return back()->withErrors(['logo' => 'Le fichier doit etre une image valide']);
+            }
+            
+            // Generer un nom de fichier securise (sans extension dans le nom)
+            $filename = time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+            
+            // Deplacer le fichier
             $file->move(public_path('logos'), $filename);
             $settings->logo = $filename;
         }
