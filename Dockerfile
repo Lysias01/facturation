@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions (removed pdo_pgsql - MySQL only)
-RUN docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl
+RUN docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd
 
 # Copy application
 COPY . /var/www/html
