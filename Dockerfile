@@ -28,7 +28,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Enable .htaccess for Apache
-COPY .htaccess /var/www/html/public/.htaccess
+COPY public/.htaccess /var/www/html/public/.htaccess
 
 EXPOSE 8080
 
