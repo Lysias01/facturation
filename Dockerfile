@@ -1,5 +1,9 @@
-FROM php:8.2-cli
+FROM php:8.2-apache
 
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -9,26 +13,23 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     npm \
-    && docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    mbstring \
-    zip \
-    exif \
-    pcntl \
-    bcmath \
-    gd
+    && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install PHP extensions (removed pdo_pgsql - MySQL only)
+RUN docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd intl
 
-WORKDIR /app
+# Copy application
+COPY . /var/www/html
 
-COPY . .
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN composer install --no-dev --optimize-autoloader
+# Set permissions
+RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
-RUN npm install && npm run build
+# Enable .htaccess for Apache
+COPY .htaccess /var/www/html/public/.htaccess
 
-EXPOSE 10000
+EXPOSE 8080
 
-CMD php -S 0.0.0.0:10000 -t public
+CMD ["apache2-foreground"]
