@@ -32,4 +32,10 @@ COPY public/.htaccess /var/www/html/public/.htaccess
 
 EXPOSE 8080
 
+# Fix permissions
+RUN chmod -R 755 /var/www/html/public
+RUN chmod -R 755 /var/www/html/storage
+RUN chmod -R 755 /var/www/html/bootstrap/cache
+
+
 CMD ["apache2-foreground"]
