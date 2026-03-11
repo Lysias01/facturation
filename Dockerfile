@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions (removed pdo_pgsql - MySQL only)
-RUN docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd
+# Install PHP extensions (with PostgreSQL support)
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring zip exif pcntl bcmath gd
 
 # Copy composer files first for caching
 COPY composer.json composer.lock /var/www/html/
