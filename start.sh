@@ -35,6 +35,14 @@ a2ensite 000-default.conf
 # Ensure storage directories have correct permissions
 chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
+# Generate Laravel key if not set
+php /var/www/html/artisan key:generate --no-interaction --force
+
+# Run Laravel optimizations
+php /var/www/html/artisan config:cache --force
+php /var/www/html/artisan route:cache --force
+php /var/www/html/artisan view:cache --force
+
 # Start Apache in foreground
 exec apache2-foreground
 
