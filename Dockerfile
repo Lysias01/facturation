@@ -16,12 +16,6 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Configure Apache to allow access to the public directory
-RUN echo "<Directory /var/www/html/public>" >> /etc/apache2/apache2.conf && \
-    echo "    AllowOverride All" >> /etc/apache2/apache2.conf && \
-    echo "    Require all granted" >> /etc/apache2/apache2.conf && \
-    echo "</Directory> /etc/apache2/apache2.conf
-
 # Set working directory
 WORKDIR /var/www/html
 
@@ -40,8 +34,16 @@ RUN composer install --no-dev --no-interaction --prefer-dist --ignore-platform-r
 # Generate APP_KEY manually
 RUN php -r "require 'vendor/autoload.php'; \$key = base64_encode(random_bytes(32)); file_put_contents('.env', preg_replace('/APP_KEY=.*/', 'APP_KEY=base64:' . \$key, file_get_contents('.env'), 1));"
 
-# Set permissions
-RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions - make them more permissive
+RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 755 /var/www/html/public
+
+# Configure Apache DocumentRoot
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
+
+# Allow .htaccess in public directory
+RUN sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's|AllowOverride None|AllowOverride All|' /etc/apache2/sites-available/000-default.conf
 
 # Expose port
 EXPOSE 8000
