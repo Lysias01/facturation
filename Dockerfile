@@ -30,6 +30,8 @@ WORKDIR /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Install Node.js dependencies and build
+WORKDIR /var/www/html
+COPY package.json package-lock.json ./
 RUN npm install && npm run build
 
 # Copy the rest of the application
