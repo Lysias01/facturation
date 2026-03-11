@@ -1,7 +1,7 @@
 FROM php:8.2-apache
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Enable Apache mod_rewrite and headers
+RUN a2enmod rewrite headers
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -38,4 +38,8 @@ RUN chmod -R 755 /var/www/html/storage
 RUN chmod -R 755 /var/www/html/bootstrap/cache
 
 
-CMD ["apache2-foreground"]
+# Copy startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]

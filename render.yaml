@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: facturation
+    runtime: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: SESSION_DRIVER
+        value: file
+
