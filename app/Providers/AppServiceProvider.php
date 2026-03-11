@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Setting;
 use App\Models\Facture;
 use App\Models\Client;
@@ -27,6 +28,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fix pour PostgreSQL sur Render
+        Schema::defaultStringLength(191);
+
+        /**
+         * Exécution automatique des migrations sur Render
+         * Cette partie s'exécute seulement si la table users n'existe pas
+         */
+        if (env('APP_ENV') === 'production' && env('APP_URL') && str_contains(env('APP_URL'), 'render.com')) {
+            try {
+                // Vérifier si les tables existent
+                if (!Schema::hasTable('users')) {
+                    \Illuminate\Support\Facades\Artisan::call('migrate --force');
+                    \Illuminate\Support\Facades\Artisan::call('db:seed --force');
+                }
+            } catch (\Exception $e) {
+                // Ignorer les erreurs si la DB n'est pas encore prête
+            }
+        }
+
         /**
          * 1️⃣ Injection globale des paramètres de l'application
          */
