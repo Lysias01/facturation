@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
     libonig-dev \
+    libpq-dev \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
