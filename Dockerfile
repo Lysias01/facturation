@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql pgsql
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_pgsql pgsql zip
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -18,17 +19,17 @@ RUN a2enmod rewrite
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy application files
-COPY . /var/www/html
+# Copy only composer files first (for better caching)
+COPY composer.json composer.lock ./
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install PHP dependencies (allow failures for dev dependencies)
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs || composer install --optimize-autoloader --ignore-platform-reqs
 
-# Generate application key
-RUN php artisan key:generate
+# Copy the rest of the application
+COPY . /var/www/html
 
 # Set permissions
 RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
