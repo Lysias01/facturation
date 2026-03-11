@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: facturation-app
+    env: php
+    buildCommand: composer install --no-dev --optimize-autoloader
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://facturation-app-prcw.onrender.com
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: dpg-d6okdr75r7bs73e7g4k0-a
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: facturation_db_2eu2
+      - key: DB_USERNAME
+        value: facturation_db_2eu2_user
+      - key: DB_PASSWORD
+        value: nQ7kfF7nWEBJqd3vlDm5XDL2Sz5N4flc
+        sync: false
