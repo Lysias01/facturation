@@ -19,18 +19,20 @@ RUN a2enmod rewrite
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy only composer files first (for better caching)
-COPY composer.json composer.lock ./
+# Copy application files
+COPY . /var/www/html
+
+# Create .env from .env.example if it doesn't exist
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install PHP dependencies (skip post-install scripts to avoid APP_KEY error)
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
-RUN composer dump-autoload --optimize --ignore-platform-reqs
+# Install dependencies without running any scripts
+RUN composer install --no-dev --no-interaction --prefer-dist --ignore-platform-reqs
 
-# Copy the rest of the application
-COPY . /var/www/html
+# Generate APP_KEY manually
+RUN php -r "require 'vendor/autoload.php'; \$key = base64_encode(random_bytes(32)); file_put_contents('.env', preg_replace('/APP_KEY=.*/', 'APP_KEY=base64:' . \$key, file_get_contents('.env'), 1));"
 
 # Set permissions
 RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
