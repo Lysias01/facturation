@@ -18,28 +18,29 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions (removed pdo_pgsql - MySQL only)
 RUN docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl bcmath gd
 
-# Copy application
-COPY . /var/www/html
+# Copy composer files first for caching
+COPY composer.json composer.lock /var/www/html/
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Install dependencies
+WORKDIR /var/www/html
+RUN composer install --no-dev --optimize-autoloader
+
+# Install Node.js dependencies and build
+RUN npm install && npm run build
+
+# Copy the rest of the application
+COPY . /var/www/html
+
 # Set permissions
-RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Enable .htaccess for Apache
-COPY public/.htaccess /var/www/html/public/.htaccess
-
-EXPOSE 8080
-
-# Fix permissions
-RUN chmod -R 755 /var/www/html/public
-RUN chmod -R 755 /var/www/html/storage
-RUN chmod -R 755 /var/www/html/bootstrap/cache
-
+RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 # Copy startup script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
+
+EXPOSE 8080
 
 CMD ["/start.sh"]
