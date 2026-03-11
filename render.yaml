@@ -1,7 +1,8 @@
 services:
   - type: web
     name: facturation-app
-    env: php
+    runtime: docker
+    dockerfilePath: Dockerfile
     buildCommand: composer install --no-dev --optimize-autoloader
     startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     plan: free
@@ -24,4 +25,3 @@ services:
         value: facturation_db_2eu2_user
       - key: DB_PASSWORD
         value: nQ7kfF7nWEBJqd3vlDm5XDL2Sz5N4flc
-        sync: false
