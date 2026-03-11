@@ -16,6 +16,12 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
+# Configure Apache to allow access to the public directory
+RUN echo "<Directory /var/www/html/public>" >> /etc/apache2/apache2.conf && \
+    echo "    AllowOverride All" >> /etc/apache2/apache2.conf && \
+    echo "    Require all granted" >> /etc/apache2/apache2.conf && \
+    echo "</Directory> /etc/apache2/apache2.conf
+
 # Set working directory
 WORKDIR /var/www/html
 
