@@ -43,6 +43,9 @@ php /var/www/html/artisan config:cache --force
 php /var/www/html/artisan route:cache --force
 php /var/www/html/artisan view:cache --force
 
+# Run migrations (ignore if already run)
+php /var/www/html/artisan migrate --force || true
+
 # Start Apache in foreground
 exec apache2-foreground
 
