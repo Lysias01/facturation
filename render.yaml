@@ -9,6 +9,10 @@ services:
         value: production
       - key: APP_DEBUG
         value: "false"
+      - key: APP_URL
+        value: https://facturation-app-prcw.onrender.com
+      - key: APP_KEY
+        value: base64:YXBwbGljYXRpb25rZXlnZW5lcmF0ZWRhdXRvbWF0aWNhbGx5
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
