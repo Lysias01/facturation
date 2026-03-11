@@ -38,15 +38,18 @@ RUN php -r "require 'vendor/autoload.php'; \$key = base64_encode(random_bytes(32
 RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 755 /var/www/html/public
 
-# Configure Apache DocumentRoot
+# Configure Apache properly
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Configure DocumentRoot to point to public/
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
-# Allow .htaccess in public directory
+# Add proper Directory configuration
 RUN sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|' /etc/apache2/sites-available/000-default.conf
 RUN sed -i 's|AllowOverride None|AllowOverride All|' /etc/apache2/sites-available/000-default.conf
 
-# Expose port
-EXPOSE 8000
+# Expose port 80
+EXPOSE 80
 
 # Start Apache and PHP
 CMD ["apache2-foreground"]
