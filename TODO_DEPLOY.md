@@ -1,174 +1,125 @@
 # Guide de Déploiement Laravel sur Render (Gratuit)
 
-## Étape 1 : Prérequis
+## Résumé des fichiers créés/modifiés
 
-### 1.1 Compte GitHub
-- Créez un compte sur [github.com](https://github.com)
-- Installez Git sur votre machine
-
-### 1.2 Compte Render
-- Créez un compte sur [render.com](https://render.com)
-- Connectez avec votre compte GitHub
+1. **Dockerfile** - Configuration Docker pour PHP 8.2 + Apache
+2. **render.yaml** - Configuration du service Render
+3. **Procfile** - Commande de démarrage (pour Heroku/Render)
 
 ---
 
-## Étape 2 : Préparer l'application
+## Étapes pour déployer sur Render
 
-### 2.1 Fichiers déjà créés :
-- ✅ `Procfile` - Commande de démarrage pour Render
-- ✅ `.htaccess` - Configuré pour Laravel
+### Étape 1 : Créer un compte Render
+1. Aller sur [render.com](https://render.com)
+2. Cliquer sur "Sign Up" et connecter avec GitHub
 
-### 2.2 Variables d'environnement à configurer sur Render :
-```
-APP_NAME=Facturation
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://votre-app.onrender.com
-APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+### Étape 2 : Créer la base de données PostgreSQL
+1. Dans le dashboard Render, cliquer sur "New +"
+2. Sélectionner "PostgreSQL"
+3. Configurer :
+   - Name : `facturation-db`
+   - Plan : Free
+4. Cliquer sur "Create Database"
+5. **Noter les informations de connexion** (host, database, user, password)
 
-DB_CONNECTION=mysql
-DB_HOST=votre-mysql-host.onrender.com
-DB_PORT=3306
-DB_DATABASE=facturation
-DB_USERNAME=votre-user
-DB_PASSWORD=votre-mot-de-passe
-```
+### Étape 3 : Mettre à jour render.yaml avec vos informations de DB
+Modifier le fichier `render.yaml` avec les vraies informations de votre base de données :
+- DB_HOST : l'hôte de votre PostgreSQL Render
+- DB_DATABASE : le nom de la base
+- DB_USERNAME : l'utilisateur
+- DB_PASSWORD : le mot de passe
 
----
-
-## Étape 3 : Créer la base de données MySQL sur Render
-
-1. Connectez-vous à [Render Dashboard](https://dashboard.render.com)
-2. Cliquez sur **"New +"** → **"PostgreSQL"** ou **"MySQL"**
-3. Configuration :
-   - **Name** : `facturation-db`
-   - **Plan** : Free
-4. Cliquez **"Create Database"**
-5. Attendez le déploiement, puis copiez :
-   - **Internal Database URL** (pour DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD)
-
----
-
-## Étape 4 : Pousser le code sur GitHub
-
-### 4.1 Initialiser Git (si pas fait)
+### Étape 4 : Pousser le code sur GitHub
 ```bash
-cd c:/laragon/www/facturation
+# Initialiser git (si pas fait)
 git init
 git add .
-git commit -m "Ready for production deployment"
-```
+git commit -m "Ready for deployment"
 
-### 4.2 Créer le dépôt GitHub
-1. Allez sur [github.com/new](https://github.com/new)
-2. Nom du dépôt : `facturation-laravel`
-3. Cliquez **"Create repository"**
-
-### 4.3 Lier et pousser
-```bash
-git remote add origin https://github.com/VOTRE_USERNAME/facturation-laravel.git
-git branch -M main
+# Créer un dépôt GitHub et pousser
+git remote add origin https://github.com/votre-compte/facturation.git
 git push -u origin main
 ```
 
----
+### Étape 5 : Connecter GitHub à Render
+1. Dans Render, cliquer sur "New +" puis "Web Service"
+2. Sélectionner votre dépôt GitHub
+3. Configurer :
+   - Name : `facturation-app`
+   - Runtime : Docker
+   - Plan : Free
 
-## Étape 5 : Déployer sur Render
+### Étape 6 : Variables d'environnement
+Les variables sont déjà configurées dans `render.yaml` :
+- APP_ENV=production
+- APP_DEBUG=false
+- DB_CONNECTION=pgsql
+- DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 
-### 5.1 Créer le Web Service
-1. Render Dashboard → **"New +"** → **"Web Service"**
-2. Connectez votre dépôt GitHub
-3. Sélectionnez le dépôt `facturation-laravel`
-4. Configuration :
-   - **Name** : `facturation-app`
-   - **Branch** : `main`
-   - **Build Command** : `composer install --no-dev --optimize-autoloader`
-   - **Start Command** : `php artisan serve --host=0.0.0.0 --port=$PORT`
-   - **Plan** : Free
+### Étape 7 : Déployer
+1. Cliquer sur "Create Web Service"
+2. Attendre le build (environ 5-10 minutes)
+3. Une fois déployé, l'URL sera disponible
 
-### 5.2 Variables d'environnement
-Dans la section **"Environment"**, ajoutez :
-```
-APP_NAME=Facturation
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://votre-app.onrender.com
-```
-
-### 5.3 Générer APP_KEY
-Cliquez sur le bouton **"Manual Deploy"** → **"Clear build cache & Deploy"**
-
----
-
-## Étape 6 : Configurer la base de données
-
-1. Après le premier déploiement, cliquez sur **"Shell"** dans votre service
-2. Générez la clé d'application :
-```bash
-php artisan key:generate
-```
-3. Copiez la clé générée et ajoutez-la aux variables d'environnement :
-```
-APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxx
-```
-4. Redéployez l'application
-
-5. Exécutez les migrations et seeders :
-```bash
-php artisan migrate --force
-php artisan db:seed --force
-```
-
----
-
-## Étape 7 : Vérifier le déploiement
-
-1. Ouvrez l'URL fournie par Render
-2. Testez la page de connexion
-3. Connectez-vous avec les identifiants par défaut :
-
-### Identifiants par défaut (après seed) :
-
-| Rôle | Email | Mot de passe |
-|------|-------|--------------|
-| Admin | admin@facturation.com | admin123 |
-| Employé | employe@facturation.com | employe123 |
-
----
-
-##⚠️ Important : Modifier le mot de passe par défaut
-
-Après la première connexion, allez dans les paramètres et modifiez le mot de passe par défaut pour des raisons de sécurité.
-
----
-
-## Commandes Utiles après déploiement
+### Étape 8 : Exécuter les migrations
+Après le déploiement, vous pouvez exécuter les migrations via :
+1. Render Dashboard → Your Service → Shell
+2. Ou utiliser le bouton "Manual Deploy" avec "Clear build cache & Deploy"
 
 ```bash
-# Vider le cache
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Annuler les migrations (si besoin)
-php artisan migrate:rollback
-
-# Créer un nouvel utilisateur admin
-php artisan tinker
-User::create(['name' => 'Admin', 'email' => 'admin@test.com', 'password' => bcrypt('password'), 'role' => 'admin']);
+php artisan migrate
+php artisan db:seed --class=DatabaseSeeder
 ```
 
 ---
 
-## Résumé des Étapes Rapides
+## Informations importantes
 
-1. ✅ Préparer l'application (fait)
-2. ✅ Créer compte GitHub et Render
-3. ✅ Créer MySQL sur Render
-4. ✅ Pousser sur GitHub
-5. ✅ Créer Web Service sur Render
-6. ✅ Configurer variables d'environnement
-7. ✅ Générer APP_KEY
-8. ✅ Exécuter migrations
-9. ✅ Tester l'application
+### Base de données
+- L'application utilise **PostgreSQL** sur Render (gratuit)
+- Votre application locale utilise MySQL
+- Les migrations sont compatibles avec les deux bases
 
+### Limites du plan gratuit Render
+- 750 heures d'exécution par mois
+- Le service se met en veille après 15 minutes d'inactivité
+- Se réveille automatiquement lors d'une requête
+
+### Résolution des problèmes
+Si l'application ne fonctionne pas :
+1. Vérifier les logs dans Render Dashboard
+2. Vérifier les variables d'environnement
+3. S'assurer que les migrations ont été exécutées
+
+---
+
+## Fichiers de configuration
+
+### Dockerfile
+```dockerfile
+FROM php:8.2-apache
+# ... configuration pour PHP + Apache + PostgreSQL
+```
+
+### render.yaml
+```yaml
+services:
+  - type: web
+    name: facturation-app
+    runtime: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    envVars:
+      # Variables d'environnement
+```
+
+---
+
+## Compte rendu
+
+- Application Laravel 10.x
+- PHP 8.2
+- Base de données PostgreSQL (Render)
+- Hébergement gratuit sur Render
+- Budget : 0 fcfa ✓

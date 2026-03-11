@@ -3,14 +3,14 @@ services:
     name: facturation-app
     runtime: docker
     dockerfilePath: Dockerfile
-    buildCommand: composer install --no-dev --optimize-autoloader
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     plan: free
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
+      - key: APP_KEY
+        value: base64:YXBwbGljYXRpb25rZXlnZW5lcmF0ZWRhdXRvbWF0aWNhbGx5
       - key: APP_URL
         value: https://facturation-app-prcw.onrender.com
       - key: DB_CONNECTION
