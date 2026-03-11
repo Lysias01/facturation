@@ -25,8 +25,9 @@ COPY composer.json composer.lock ./
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install PHP dependencies (allow failures for dev dependencies)
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs || composer install --optimize-autoloader --ignore-platform-reqs
+# Install PHP dependencies (skip post-install scripts to avoid APP_KEY error)
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-scripts
+RUN composer dump-autoload --optimize --ignore-platform-reqs
 
 # Copy the rest of the application
 COPY . /var/www/html
