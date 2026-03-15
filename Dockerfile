@@ -22,13 +22,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Définir le dossier de travail
 WORKDIR /var/www/html
 
-# Copier le code de Laravel
+# Copier le code Laravel
 COPY . .
 
 # Installer les dépendances PHP
 RUN composer install --no-dev --optimize-autoloader
 
-# Installer les dépendances JS et builder les assets
+# Installer et builder les assets JS
 RUN npm install && npm run build
 
 # Config Apache
