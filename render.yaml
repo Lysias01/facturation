@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: facturation-app&#10;    envVars:&#10;      - key: APP_DEBUG&#10;        value: "true"&#10;      - key: APP_ENV&#10;        value: production
+    name: facturation-app
     runtime: docker
     dockerfilePath: Dockerfile
     plan: free
@@ -8,9 +8,9 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: "false"
+        value: "true"
       - key: APP_URL
-        value: https://facturation-app-prcw.onrender.com
+        value: https://facturation-app-qwu4.onrender.com
       - key: APP_KEY
         value: base64:YXBwbGljYXRpb25rZXlnZW5lcmF0ZWRhdXRvbWF0aWNhbGx5
       - key: DB_CONNECTION
