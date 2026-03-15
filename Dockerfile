@@ -1,28 +1,45 @@
-FROM richarvey/nginx-php-fpm:latest
+FROM php:8.3-apache
 
-# Set environment variables
-ENV WEBROOT=/var/www/html/public
+# Install system deps
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm \
+    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 WORKDIR /var/www/html
 
-# Copy application files
-COPY . /var/www/html
+# Copy code
+COPY . .
 
-# Create .env from .env.example if it doesn't exist
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
-
-# Generate APP_KEY if not set
-RUN php artisan key:generate --force || true
-
-# Install dependencies
+# Composer install
 RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
+# NPM
+RUN npm ci && npm run build
 
-# Cache Laravel config
+# Apache config
+RUN a2enmod rewrite
+RUN echo 'ServerName localhost' >> /etc/apache2/apache2.conf
+RUN sed -i 's!/var/www/html/public!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+
+# Laravel
+RUN chown -R www-data:www-data /var/www/html
 RUN php artisan config:cache
 RUN php artisan route:cache
-RUN php artisan view:cache || true
+RUN php artisan view:cache
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]
