@@ -1,6 +1,7 @@
+# Base image PHP + Apache
 FROM php:8.3-apache
 
-# Installer les dépendances système
+# Installer dépendances système
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -28,7 +29,7 @@ COPY . .
 # Installer les dépendances PHP
 RUN composer install --no-dev --optimize-autoloader
 
-# Installer et builder les assets JS
+# Installer les dépendances JS et builder les assets
 RUN npm install && npm run build
 
 # Config Apache
@@ -38,8 +39,10 @@ RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available
 
 # Permissions Laravel
 RUN chown -R www-data:www-data /var/www/html
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Cache Laravel
+RUN php artisan key:generate --force
 RUN php artisan config:cache
 RUN php artisan route:cache
 RUN php artisan view:cache
