@@ -31,20 +31,17 @@ RUN composer install --no-dev --optimize-autoloader
 # Installer et builder les assets JS
 RUN npm install && npm run build
 
-# Permissions Laravel AVANT migrate
+# Permissions
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 775 storage bootstrap/cache
-
-RUN php artisan key:generate --force
-RUN php artisan migrate --force
-RUN php artisan db:seed --force
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Config Apache
 RUN a2enmod rewrite
 RUN echo 'ServerName localhost' >> /etc/apache2/apache2.conf
 RUN sed -i "s|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g" /etc/apache2/sites-available/000-default.conf
 
-# Cache Laravel (après migrate)
+# Cache Laravel (env from Render)
 RUN php artisan config:cache
 RUN php artisan route:cache
 RUN php artisan view:cache
