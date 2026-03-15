@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: facturation-app
+    name: facturation-app&#10;    envVars:&#10;      - key: APP_DEBUG&#10;        value: "true"&#10;      - key: APP_ENV&#10;        value: production
     runtime: docker
     dockerfilePath: Dockerfile
     plan: free
