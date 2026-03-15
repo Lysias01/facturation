@@ -29,12 +29,12 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # Installer et builder les assets JS
-RUN npm install && npm run build
+RUN npm install && npm run build&#10;&#10;RUN php artisan key:generate --force&#10;RUN php artisan migrate --force&#10;RUN php artisan db:seed --force
 
 # Config Apache
 RUN a2enmod rewrite
 RUN echo 'ServerName localhost' >> /etc/apache2/apache2.conf
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i "s|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g" /etc/apache2/sites-available/000-default.conf
 
 # Permissions Laravel
 RUN chown -R www-data:www-data /var/www/html
