@@ -1,7 +1,7 @@
 FROM php:8.3-apache
 
-# Install system deps
-RUN apt-get update &amp;&amp; apt-get install -y \
+# Installer les dépendances système
+RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
@@ -10,35 +10,42 @@ RUN apt-get update &amp;&amp; apt-get install -y \
     libzip-dev \
     zip \
     unzip \
-    libnode-dev \
-    &amp;&amp; docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip \
-    &amp;&amp; apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*
+    nodejs \
+    npm \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Composer
+# Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Définir le dossier de travail
 WORKDIR /var/www/html
 
-# Copy code
+# Copier le code de Laravel
 COPY . .
 
-# Composer install
+# Installer les dépendances PHP
 RUN composer install --no-dev --optimize-autoloader
 
-# NPM
-RUN npm install &amp;&amp; npm run build
+# Installer les dépendances JS et builder les assets
+RUN npm install && npm run build
 
-# Apache config
+# Config Apache
 RUN a2enmod rewrite
 RUN echo 'ServerName localhost' >> /etc/apache2/apache2.conf
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
-# Laravel
+# Permissions Laravel
 RUN chown -R www-data:www-data /var/www/html
+
+# Cache Laravel
 RUN php artisan config:cache
 RUN php artisan route:cache
 RUN php artisan view:cache
 
+# Exposer le port 80
 EXPOSE 80
 
+# Lancer Apache
 CMD ["apache2-foreground"]
