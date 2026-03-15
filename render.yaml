@@ -8,7 +8,13 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: "true"
+        value: "false"
+
+      - key: LOG_CHANNEL  
+        value: errorlog
+
+      - key: DB_SSLMODE
+        value: prefer
       - key: APP_URL
         value: https://facturation-app-qwu4.onrender.com
       - key: APP_KEY

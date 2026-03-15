@@ -42,12 +42,10 @@ RUN echo 'ServerName localhost' >> /etc/apache2/apache2.conf
 RUN sed -i "s|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g" /etc/apache2/sites-available/000-default.conf
 
 # Cache Laravel (env from Render)
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
+RUN chmod +x start.sh
 
 # Exposer le port 80
 EXPOSE 80
 
-# Lancer Apache
-CMD ["apache2-foreground"]
+# Lancer via start.sh (runtime)
+CMD ["./start.sh"]
