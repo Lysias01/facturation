@@ -1,13 +1,10 @@
 #!/bin/bash
 set -e
 
-# Créer .env si absent (Render injecte vars)
-if [ ! -f .env ]; then
-  cp .env.example .env
-fi
+# Laravel utilise Render env vars direct (pas besoin .env file)
 
-# Key Laravel
-php artisan key:generate --force --no-interaction
+# Key Laravel (force override)
+php artisan key:generate --force --no-interaction --quiet
 
 # DB setup
 php artisan migrate --force --no-interaction

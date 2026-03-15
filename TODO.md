@@ -14,7 +14,8 @@
 ## ✅ Étape 4: Fix .env.example
 - [x] Template Postgres prod
 
-## ⬜ Étape 5: Supprimer Procfile inutile
+## ✅ Étape 5: Supprimer Procfile inutile
+- [x] Pas nécessaire (seulement .bak, Docker ignore)
 
 ## ⬜ Étape 6: Test local (docker build)
 - docker build -t facturation .
